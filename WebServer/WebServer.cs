@@ -29,6 +29,7 @@ namespace WebServer
     class WebServer
     {
         private readonly string _webRoot;
+        private readonly string _defaultDocument;
         private IScriptProcessor _scriptProcessor;
 
         static void Main(string[] args)
@@ -41,14 +42,22 @@ namespace WebServer
             }
             catch (Exception) { }
 
+            string defaultDocument = "index.html";
+            try
+            {
+                defaultDocument = args[1];
+            }
+            catch (Exception) { }
+
+
             /* if the user does not provide a web root, default to /wwwroot */
             string webRoot = args.Count() > 1 ? args[1] : @"C:\wwwroot";
 
             /* create an instance of the web server and start listening for requests */
-            new WebServer(port, webRoot);
+            new WebServer(port, webRoot, defaultDocument);
         }
 
-        public WebServer(int port, string root)
+        public WebServer(int port, string root, string defaultDocument)
         {
             /* this script processor instance will be used to process files of type 
              * csscript */
@@ -60,6 +69,7 @@ namespace WebServer
             /* set the root for the server */
             _webRoot = root;
 
+            _defaultDocument = defaultDocument;
 
             /* create a TcpListener to listen for netweork requests on the provided
              * port number at the lookedup host address and start listening */
@@ -129,48 +139,39 @@ namespace WebServer
                  */
                 string resource = header.Substring(4, header.IndexOf("HTTP") - 4).Trim();
 
-                /* If the root is being requested, send back a default web page stating
-                 * that this server doesn't support default documents or directory
-                 * listing. 
-                 * 
-                 * TODO: change this to support a default document (i.e. index.html) as
-                 * specified by the user. Such a default document should be able to 
-                 * reside at any level of the directory structure under web root. If
-                 * a default document doesn't exist, an HTTP Not Found response should
-                 * be returned
+                /* If the root is being requested, send back a default web page
                  */
                 if (resource.Equals("/"))
                 {
-                    string html = "<html><body><h1>Server Server v. 1.0</h1><p>Default pages aren't support, request a specific resources</p></body></html>";
-                    _SendResponse(socket, Encoding.UTF8.GetBytes(html), "text/html; charset=utf8", ResponseType.OK);
+                    resource = string.Format("{0}\\{1}", _webRoot, _defaultDocument);
                 }
                 else
                 {
-                    /* if an actual resource was requested, append the webroot to it to transform 
-                     * the path to a system local path and parse the full path to separate the path
-                     * from the request variables */
                     resource = string.Format("{0}{1}", _webRoot, resource.Replace("/", @"\"));
-                    string[] parts = resource.Split('?');
-                    resource = parts[0]; // the resource is the first half of the path
-
-                    /* the request variables are the second part of the path and these are loaded
-                     * into an IDictionary instance to be used later */
-                    Dictionary<string, string> requestParameters = parts.Count() > 1 ? parts[1].Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(part => part.Split('='))
-                         .ToDictionary(split => split[0], split => split[1]) : new Dictionary<string, string>();
-
-                    /* if the path is to a file that exists under the webroot directory, 
-                     * create an HTTP response with that file in the response body */
-                    if (File.Exists(resource))
-                    {
-                        _ProcessBody(socket, resource, requestParameters);
-                    }
-                    else
-                    {
-                        /* otherwise generate a Not Found (404) response */ 
-                        _SendResponse(socket, new byte[0], null, ResponseType.NOT_FOUND);
-                    }
                 }
+
+                string[] parts = resource.Split('?');
+                resource = parts[0]; // the resource is the first half of the path
+
+                /* the request variables are the second part of the path and these are loaded
+                    * into an IDictionary instance to be used later */
+                Dictionary<string, string> requestParameters = parts.Count() > 1 ? parts[1].Split(new[] { '&' },
+                    StringSplitOptions.RemoveEmptyEntries)
+                    .Select(part => part.Split('='))
+                        .ToDictionary(split => split[0], split => split[1]) : new Dictionary<string, string>();
+
+                /* if the path is to a file that exists under the webroot directory, 
+                    * create an HTTP response with that file in the response body */
+                if (File.Exists(resource))
+                {
+                    _ProcessBody(socket, resource, requestParameters);
+                }
+                else
+                {
+                    /* otherwise generate a Not Found (404) response */
+                    _SendResponse(socket, new byte[0], null, ResponseType.NOT_FOUND);
+                }
+
 
             }
             socket.Close(); // always make sure to close network and file handles!!
@@ -202,7 +203,7 @@ namespace WebServer
                 /* this is a special case as the requested file needs to be executed and the 
                  * result of the execution returned as the response body rather than the 
                  * file itself */
-                case ".csscript": 
+                case ".csscript":
                     {
                         _GenerateScriptResult(socket, path, requestParameters);
                         return;
