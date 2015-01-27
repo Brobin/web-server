@@ -41,7 +41,8 @@ namespace WebServer
                 port = Convert.ToInt16(args[0]);
             }
             catch (Exception) { }
-
+            
+            /* if the user doesn't provide a default document, use index.html */
             string defaultDocument = "index.html";
             try
             {
@@ -139,11 +140,12 @@ namespace WebServer
                  */
                 string resource = header.Substring(4, header.IndexOf("HTTP") - 4).Trim();
 
-                /* If the root is being requested, send back a default web page
+                /* If the root is being requested, send back a default web page, this also
+                 * supports directories, as long as the requested resourse ends with '/'
                  */
-                if (resource.Equals("/"))
+                if (resource.EndsWith("/"))
                 {
-                    resource = string.Format("{0}\\{1}", _webRoot, _defaultDocument);
+                    resource = string.Format("{0}{1}{2}", _webRoot,resource.Replace("/", @"\"), _defaultDocument);
                 }
                 else
                 {
