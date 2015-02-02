@@ -62,7 +62,7 @@ namespace WebServer
         {
             /* this script processor instance will be used to process files of type 
              * csscript */
-            _scriptProcessor = new CscriptProcessor();
+            _scriptProcessor = new CWebTemplateProcessor();
 
             /*TODO: add another instance of a IScriptProcessor to handle files of
              * type csweb */
@@ -205,7 +205,7 @@ namespace WebServer
                 /* this is a special case as the requested file needs to be executed and the 
                  * result of the execution returned as the response body rather than the 
                  * file itself */
-                case ".csscript":
+                case ".cscript":
                     {
                         _GenerateScriptResult(socket, path, requestParameters);
                         return;
