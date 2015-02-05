@@ -71,7 +71,7 @@ namespace WebServer
 
         public string _WriteHtml(string html)
         {
-            string escapedHtml = html.Replace('"', '\"');
+            string escapedHtml = html.Replace("\"", "\\\"");
             return String.Format("wout.WriteLine(\"{0}\");", escapedHtml);
         }
 
