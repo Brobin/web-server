@@ -48,16 +48,14 @@ namespace WebServer
                 // Code block
                 else if (line.Contains("{"))
                 {
-                    // Loop until the end of the block
-                    while(!line.Contains("}"))
+                    // find closing tag
+                    int closing = FindClosingTag(i, lines);
+                    // append everything within the tags
+                    for(i = i+1; i < closing; i++)
                     {
-                        i++;
-                        line = lines[i];
-                        if (!line.Contains("}"))
-                        {
-                            builder.Append(line);
-                        }
+                        builder.Append(lines[i]);
                     }
+
                 }
                 // HTML output
                 else
@@ -67,6 +65,27 @@ namespace WebServer
             }
             builder.Append("}catch(Exception e){}");
             return builder.ToString();
+        }
+
+        public int FindClosingTag(int i, List<string> lines)
+        {
+            int otherBraces = 0;
+            bool done = false;
+            while(!done || otherBraces != 0)
+            {
+                i++;
+                string line = lines[i];
+                if(line.Contains("{"))
+                {
+                    otherBraces++;
+                }
+                else if (line.Contains("}"))
+                {
+                    if (otherBraces == 0) done = true;
+                    else otherBraces--;
+                }
+            }
+            return i;
         }
 
         public string _WriteHtml(string html)
