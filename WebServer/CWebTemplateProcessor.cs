@@ -31,12 +31,12 @@ namespace WebServer
         {
             StringBuilder builder = new StringBuilder();
             // Try-Catch for request parameters
-            builder.Append("try{");
             // Loop through ech line of the template
             for(int i = 0; i < lines.Count; i++)
             {
                 string line = lines[i];
                 // Print a varible
+                if (line.Contains("request[")) builder.Append("try{");
                 if (line.Contains("@{"))
                 {
                     line = line.Replace("@", "");
@@ -62,8 +62,9 @@ namespace WebServer
                 {
                     builder.AppendLine(_WriteHtml(line));
                 }
+                if (line.Contains("request[")) builder.Append("}catch(Exception e){}");
             }
-            builder.Append("}catch(Exception e){}");
+            
             return builder.ToString();
         }
 
