@@ -31,6 +31,7 @@ namespace WebServer
         private readonly string _webRoot;
         private readonly string _defaultDocument;
         private IScriptProcessor _scriptProcessor;
+        private IScriptProcessor _webScriptProcessor;
 
         static void Main(string[] args)
         {
@@ -62,10 +63,11 @@ namespace WebServer
         {
             /* this script processor instance will be used to process files of type 
              * csscript */
-            _scriptProcessor = new CWebTemplateProcessor();
+            _scriptProcessor = new CscriptProcessor();
 
             /*TODO: add another instance of a IScriptProcessor to handle files of
              * type csweb */
+            _webScriptProcessor = new CWebTemplateProcessor();
 
             /* set the root for the server */
             _webRoot = root;
@@ -207,9 +209,15 @@ namespace WebServer
                  * file itself */
                 case ".cscript":
                     {
-                        _GenerateScriptResult(socket, path, requestParameters);
+                        _GenerateScriptResult(socket, path, requestParameters, type);
+                        break;
+                    }
+                case ".cweb":
+                    {
+                        _GenerateScriptResult(socket, path, requestParameters, type);
                         return;
                     }
+                
 
                 /* TODO: add another handler for processing web template files
                  * case ".csweb": 
@@ -289,13 +297,20 @@ namespace WebServer
 
         /* This method will process a script file and send the results as the 
          * body of the response */
-        private void _GenerateScriptResult(Socket socket, string path, Dictionary<string, string> requestParameters)
+        private void _GenerateScriptResult(Socket socket, string path, Dictionary<string, string> requestParameters, string type)
         {
             /* get a script result from the scrupt processor using the request parameter dictionary */
             ScriptResult result;
             using (FileStream fs = File.OpenRead(path))
             {
-                result = _scriptProcessor.ProcessScript(fs, requestParameters);
+                if(type.Equals(".cscript"))
+                {
+                    result = _scriptProcessor.ProcessScript(fs, requestParameters);
+                }
+                else
+                {
+                    result = _webScriptProcessor.ProcessScript(fs, requestParameters);
+                }
             }
             /* if the result was an error, send an HTTP Error (500) along wiht a summary of 
              * what went wrong as the body */
