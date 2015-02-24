@@ -205,16 +205,11 @@ namespace WebServer
                  * result of the execution returned as the response body rather than the 
                  * file itself */
                 case ".cscript":
-                    {
-                        _GenerateScriptResult(socket, path, requestParameters, _scriptProcessor);
-                        break;
-                    }
+                    _GenerateScriptResult(socket, path, requestParameters, _scriptProcessor);
+                    break;
                 case ".cweb":
-                    {
-                        _GenerateScriptResult(socket, path, requestParameters, _webScriptProcessor);
-                        return;
-                    }
-                
+                    _GenerateScriptResult(socket, path, requestParameters, _webScriptProcessor);
+                    return;
 
                 /* TODO: add another handler for processing web template files
                  * case ".csweb": 
