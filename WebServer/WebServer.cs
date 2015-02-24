@@ -206,12 +206,12 @@ namespace WebServer
                  * file itself */
                 case ".cscript":
                     {
-                        _GenerateScriptResult(socket, path, requestParameters, type);
+                        _GenerateScriptResult(socket, path, requestParameters, _scriptProcessor);
                         break;
                     }
                 case ".cweb":
                     {
-                        _GenerateScriptResult(socket, path, requestParameters, type);
+                        _GenerateScriptResult(socket, path, requestParameters, _webScriptProcessor);
                         return;
                     }
                 
@@ -294,20 +294,13 @@ namespace WebServer
 
         /* This method will process a script file and send the results as the 
          * body of the response */
-        private void _GenerateScriptResult(Socket socket, string path, Dictionary<string, string> requestParameters, string type)
+        private void _GenerateScriptResult(Socket socket, string path, Dictionary<string, string> requestParameters, IScriptProcessor processor)
         {
             /* get a script result from the scrupt processor using the request parameter dictionary */
             ScriptResult result;
             using (FileStream fs = File.OpenRead(path))
             {
-                if(type.Equals(".cscript"))
-                {
-                    result = _scriptProcessor.ProcessScript(fs, requestParameters);
-                }
-                else
-                {
-                    result = _webScriptProcessor.ProcessScript(fs, requestParameters);
-                }
+                result = processor.ProcessScript(fs, requestParameters);
             }
             /* if the result was an error, send an HTTP Error (500) along wiht a summary of 
              * what went wrong as the body */
