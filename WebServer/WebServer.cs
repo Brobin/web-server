@@ -44,7 +44,7 @@ namespace WebServer
             catch (Exception) { }
             
             /* if the user doesn't provide a default document, use index.html */
-            string defaultDocument = "index.html";
+            string defaultDocument = "\\index.html";
             try
             {
                 defaultDocument = args[1];
@@ -141,17 +141,14 @@ namespace WebServer
                  * GET /somepath/to/some/thing HTTP/1.1
                  */
                 string resource = header.Substring(4, header.IndexOf("HTTP") - 4).Trim();
+                resource = string.Format("{0}{1}", _webRoot, resource.Replace("/", @"\"));
 
                 /* If the root is being requested, send back a default web page, this also
                  * supports directories, as long as the requested resourse ends with '/'
                  */
-                if (resource.EndsWith("/"))
+                if (Directory.Exists(resource))
                 {
-                    resource = string.Format("{0}{1}{2}", _webRoot, resource.Replace("/", @"\"), _defaultDocument);
-                }
-                else
-                {
-                    resource = string.Format("{0}{1}", _webRoot, resource.Replace("/", @"\"));
+                    resource = string.Format("{0}{1}", resource, _defaultDocument);
                 }
 
                 string[] parts = resource.Split('?');
