@@ -11,86 +11,77 @@ namespace WebServer
     {
         public ScriptResult ProcessScript(Stream stream, IDictionary<string, string> requestParameters)
         {
-
+            // read the whole file into a string
             StreamReader reader = new StreamReader(stream);
-            List<String> lines = new List<String>();
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine();
-                lines.Add(line);
-            }
-            string output = ProcessScript(lines);
+            string output = ProcessScript(reader.ReadToEnd());
 
+            // convert the output to a stream
             Stream outputStream = StringToStream(output);
 
+            // use the processor to get the result
             var processor = new CscriptProcessor();
             return processor.ProcessScript(outputStream, requestParameters);
         }
 
-        public string ProcessScript(List<string> lines)
+        public string ProcessScript(string file)
         {
-            StringBuilder builder = new StringBuilder();
-            // Try-Catch for request parameters
-            // Loop through ech line of the template
-            for(int i = 0; i < lines.Count; i++)
-            {
-                string line = lines[i];
-                // Print a varible
-                if (line.Contains("request[")) builder.Append("try{");
-                if (line.Contains("@{"))
-                {
-                    line = line.Replace("@", "");
-                    var parts = line.Split(new char[] {'{', '}'});
-                    builder.Append(_WriteHtml(parts[0]));
-                    for (int j = 1; j < parts.Length; j++ )
-                    {
-                        builder.Append(_WriteVariable(parts[j]));
-                        j++;
-                        builder.Append(_WriteHtml(parts[j]));
-                    }
-                }
-                // Code block
-                else if (line.Contains("{"))
-                {
-                    // find closing tag
-                    int closing = FindClosingTag(i, lines);
-                    // append everything within the tags
-                    for(i = i+1; i < closing; i++)
-                    {
-                        builder.Append(lines[i]);
-                    }
+            StringBuilder result = new StringBuilder();
+            int length = file.Length;
+            int beginning = 0;
 
-                }
-                // HTML output
-                else
+            for (int i = 0; i < length; i++ )
+            {
+                // check for a code or variable block
+                Boolean codeBlock = (file.ElementAt(i) == '{');
+                Boolean variableBlock = (i < length - 1 && file.Substring(i, 2) == "@{");
+
+                if(codeBlock || variableBlock)
                 {
-                    builder.AppendLine(_WriteHtml(line));
+                    // output the html up tot his point
+                    string html = file.Substring(beginning, i - beginning);
+                    result.Append(_WriteHtml(html));
+
+                    // account for the @
+                    if (variableBlock) i++;
+
+                    // find the closing tag and split to get the code
+                    int end = FindClosingTag(i, file);
+                    string code = file.Substring(i + 1, end - i - 1);
+
+                    // account for missing request parameters
+                    Boolean request = (code.Contains("request["));
+                    // add the try
+                    if (request) result.Append("try{");
+
+                    // append the code to the StringBuilder
+                    if (codeBlock) result.Append(code);
+                    else if (variableBlock) result.Append(_WriteVariable(code));
+
+                    // add the catch
+                    if (request) result.Append("} catch(Exception e) { wout.WriteLine(\"not found\"); }");
+
+                    // fix up the variables to account for skipped characters
+                    i = end;
+                    beginning = i + 1;
                 }
-                if (line.Contains("request[")) builder.Append("}catch(Exception e){wout.WriteLine(\"not found\");}");
             }
-            
-            return builder.ToString();
+            string htmlLeft = file.Substring(beginning);
+            result.Append(_WriteHtml(htmlLeft));
+
+            return result.ToString();
         }
 
-        public int FindClosingTag(int i, List<string> lines)
+        public int FindClosingTag(int i, string file)
         {
-            int otherBraces = 0;
-            bool done = false;
-            while(!done || otherBraces != 0)
+            int count = 1;
+            int j = i;
+            while (count > 0)
             {
-                i++;
-                string line = lines[i];
-                if(line.Contains("{"))
-                {
-                    otherBraces++;
-                }
-                else if (line.Contains("}"))
-                {
-                    if (otherBraces == 0) done = true;
-                    else otherBraces--;
-                }
+                j++;
+                if (file.ElementAt(j) == '{') count++;
+                else if (file.ElementAt(j) == '}') count--;
             }
-            return i;
+            return j;
         }
 
         public string _WriteHtml(string html)
