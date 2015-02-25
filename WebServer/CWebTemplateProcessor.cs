@@ -101,7 +101,7 @@ namespace WebServer
 
         public string _WriteVariable(string variable)
         {
-            return String.Format("wout.WriteLine({0});", variable);
+            return String.Format("wout.WriteLine({0}.Replace(\"%20\",\" \"));", variable);
         }
 
         public Stream StringToStream(string s)

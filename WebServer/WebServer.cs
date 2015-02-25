@@ -147,7 +147,7 @@ namespace WebServer
                  */
                 if (resource.EndsWith("/"))
                 {
-                    resource = string.Format("{0}{1}{2}", _webRoot,resource.Replace("/", @"\"), _defaultDocument);
+                    resource = string.Format("{0}{1}{2}", _webRoot, resource.Replace("/", @"\"), _defaultDocument);
                 }
                 else
                 {
