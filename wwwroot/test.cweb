@@ -5,20 +5,23 @@
 	<body>
 		<div class="container">
 			{
-				string foo = "My Great Template!!!";
+				string user = "Tobin";
+				string foo = "Great Template!!!";
 				DateTime dt = DateTime.Now;
-				int x = 0;
-				for(int i = 0; i < 10; i++)
-				{
-					x++;
-					wout.WriteLine(x);
-				}
 			}
-			<h1>@{foo}</h1>
+			<h1>@{user}'s @{foo}</h1>
 			<p>The current time is @{dt.ToString("MMM dd, yyyy hh:mm:ss")}</p>
 
-			<span>The value of the parameter user is</span> @{request["user"]}
-			<p>@{x}</p>
+			<p>The value of the parameter user is @{request["user"]}</p>
+
+			<p>
+			{
+				for(int i = 0; i < 10; i++)
+				{
+					wout.WriteLine(i);
+				}
+			}
+			</p>
 		</div>
 	</body>
 </html>

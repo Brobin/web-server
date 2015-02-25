@@ -42,8 +42,12 @@ namespace WebServer
                     line = line.Replace("@", "");
                     var parts = line.Split(new char[] {'{', '}'});
                     builder.Append(_WriteHtml(parts[0]));
-                    builder.Append(_WriteVariable(parts[1]));
-                    builder.Append(_WriteHtml(parts[2]));
+                    for (int j = 1; j < parts.Length; j++ )
+                    {
+                        builder.Append(_WriteVariable(parts[j]));
+                        j++;
+                        builder.Append(_WriteHtml(parts[j]));
+                    }
                 }
                 // Code block
                 else if (line.Contains("{"))
@@ -62,7 +66,7 @@ namespace WebServer
                 {
                     builder.AppendLine(_WriteHtml(line));
                 }
-                if (line.Contains("request[")) builder.Append("}catch(Exception e){}");
+                if (line.Contains("request[")) builder.Append("}catch(Exception e){wout.WriteLine(\"not found\");}");
             }
             
             return builder.ToString();
