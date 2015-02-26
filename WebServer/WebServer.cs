@@ -47,7 +47,7 @@ namespace WebServer
             string defaultDocument = "\\index.html";
             try
             {
-                defaultDocument = args[1];
+                defaultDocument = args[2];
             }
             catch (Exception) { }
 
